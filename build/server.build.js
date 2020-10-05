@@ -6,7 +6,7 @@ webpack(cf, (err, stats) => { // Stats Object
   if (err || stats.hasErrors()) {
     console.log(err)
   }
-  fs.mkdirSync('./release/server')
+  fs.existsSync('./release/server') || fs.mkdirSync('./release/server')
 	copy('./server/views','./release/server/views')
 	copy('./server/public','./release/server/public')
   console.log('server done')
