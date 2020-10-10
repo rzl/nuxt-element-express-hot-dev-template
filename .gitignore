@@ -92,3 +92,5 @@ sw.*
 hotdata
 release/*
 server.release.tmp.js
+server/config/dbmethods.txt
+*.sqlite

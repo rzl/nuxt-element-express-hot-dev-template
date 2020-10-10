@@ -4,6 +4,13 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var models = require('./server/models');
+
+models.sequelize.sync({ alter: true }).then(() => {
+  console.log('sequelize init success')
+  initDatabase(models)
+})
+
 var app = express();
 
 app.set('views', path.join(__dirname, 'server/views'));

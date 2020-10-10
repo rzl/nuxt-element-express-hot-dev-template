@@ -19,9 +19,12 @@
     "element-ui": "^2.13.2",
     "http-errors": "^1.8.0",
     "morgan": "^1.10.0",
-    "nuxt": "^2.14.5"
+    "nuxt": "^2.14.5",
+    "sequelize": "^5.19.6",
+    "sqlite3": "^4.1.0"
   },
   "devDependencies": {
+    "sequelize-cli": "^5.5.1",
     "start-server-webpack-plugin": "^2.2.5",
     "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12",
