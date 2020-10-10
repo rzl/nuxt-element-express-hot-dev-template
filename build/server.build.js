@@ -1,7 +1,7 @@
 var fs = require('fs')
 var webpack = require('webpack')
 var cf = require('./webpack.build.config.js')
-var copy = require('./copy') 
+var copy = require('./copy')
 webpack(cf, (err, stats) => { // Stats Object
   if (err || stats.hasErrors()) {
     console.log(err)
