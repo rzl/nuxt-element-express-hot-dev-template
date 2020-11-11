@@ -15,6 +15,7 @@ http.listen(3001);
 
 if (module.hot) {
   module.hot.accept(['./server.js'], (a) => {
+    console.log('server hot load')
     http.removeListener('request', server);
     server = require('./server.js')
     server.use(nuxt.render);

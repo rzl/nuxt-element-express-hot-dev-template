@@ -1,15 +1,30 @@
 {
-  "development": {
+  "development1": {
+    "dialect": "sqlite",
+    "storage": "database.sqlite",
+    "retry": {
+      "max": 10
+    }
+  },  
+  "production1": {
     "dialect": "sqlite",
     "storage": "database.sqlite",
     "retry": {
       "max": 10
     }
   },
+  "development": {
+    "username": "root",
+    "password": "123456",
+    "database": "fff",
+    "host": "127.0.0.1",
+    "port": "23306",
+    "dialect": "mysql"
+  },  
   "production": {
     "username": "root",
     "password": "123456",
-    "database": "okr",
+    "database": "fff",
     "host": "127.0.0.1",
     "port": "23306",
     "dialect": "mysql"

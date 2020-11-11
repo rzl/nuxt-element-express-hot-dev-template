@@ -3,10 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
-const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 
-console.log(env)
 const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
 
@@ -15,7 +13,8 @@ var table = {
   okr: require('./okr'),
   permission: require('./permission'),
   role: require('./role'),
-  user: require('./user')
+  user: require('./user'),
+  /*permissionRole: require('./permissionRole')*/
 }
 
 let sequelize;

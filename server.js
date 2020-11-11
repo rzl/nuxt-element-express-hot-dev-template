@@ -4,12 +4,13 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var initDatabase = require('./server/config/initDatabase.js')
 var models = require('./server/models');
 
-models.sequelize.sync({ alter: true }).then(() => {
+/*models.sequelize.sync({ alter: true }).then(() => {
   console.log('sequelize init success')
   initDatabase(models)
-})
+})*/
 
 var app = express();
 
@@ -22,9 +23,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'server/public')));
 
-var indexRouter = require('./server/routes/index');
+var useRouter = require('./server/routes/useRouter');
 
-app.use('/api', indexRouter);
+useRouter(app)
 
 // error handler
 app.use(function(err, req, res, next) {
