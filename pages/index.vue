@@ -6,11 +6,11 @@
         </calendarPreview>
       </el-tab-pane>
       <el-tab-pane label="任务列表" name="newTask">
-        <newTask :newTaskLevel='newTaskLevel' :newTask="newTask" @onFresh="m_fresh">
+        <newTask :shareData="shareData" :newTaskLevel='newTaskLevel' :newTask="newTask" @onFresh="m_fresh">
         </newTask>
       </el-tab-pane>
       <el-tab-pane label="假期设定" name="third">
-        <workSet :workday="workday" :workHour="workHour" :holiday="holiday" :defaultHoliday="defaultHoliday" @onSetChange="m_setChange" @onWorkdayFresh="m_workdayFresh" @onHolidayFresh="m_holidayFresh">
+        <workSet :workday="workday" :workHour="workHour" :holiday="holiday" :dayWorkHour="dayWorkHour" :defaultHoliday="defaultHoliday" @onSetChange="m_setChange" @onWorkdayFresh="m_workdayFresh" @onHolidayFresh="m_holidayFresh" @onDayWorkHourFresh="m_dayWorkHourFresh">
         </workSet>
       </el-tab-pane>
     </el-tabs>
@@ -28,13 +28,24 @@ export default {
   },
   mounted() {
 
+    this.m_resolveDayWorkHour()
     this.m_resolveWorkday()
     this.m_resolveHoliday()
     this.freshFutureTaskList()
   },
   methods: {
+    m_resolveDayWorkHour() {
+      this.shareData.dayWorkHourArr = []
+      this.shareData.dayWorkHourKeyValue = {}
+      console.log(this.dayWorkHour)
+      this.dayWorkHour.forEach((w) => {
+        this.shareData.dayWorkHourArr.push(w.day)
+        this.shareData.dayWorkHourKeyValue[w.day] = w
+      }, this)
+    },
     m_resolveWorkday() {
       this.shareData.workdayArr = []
+      this.shareData.workdayKeyValue = {}
       this.workday.forEach((w) => {
         this.shareData.workdayArr.push(w.day)
         this.shareData.workdayKeyValue[w.day] = w
@@ -42,10 +53,15 @@ export default {
     },
     m_resolveHoliday() {
       this.shareData.holidayArr = []
+      this.shareData.holidayKeyValue = {}
       this.holiday.forEach((h) => {
         this.shareData.holidayArr.push(h.day)
         this.shareData.holidayKeyValue[h.day] = h
       }, this)
+    },
+    m_dayWorkHourFresh(v) {
+      this.m_resolveDayWorkHour()
+      this.freshFutureTaskList()
     },
     m_workdayFresh(v) {
       this.m_resolveWorkday()
@@ -85,13 +101,19 @@ export default {
           }
         }
       })
-      var tmpWorkHour = this.workHour
+
+
       var day = this.$formatDateTime(new Date(), 'yyyy-MM-dd')
       console.log(day)
+      var tmpWorkHour = this.getDayWorkHour(day)
+      var taskDoneHour = this.getDayTaskDoneHour(day)
       this.shareData.futureTaskList[day] = []
       taskList.forEach((task) => {
-        var taskWorkHour = task.workHour
+        var taskWorkHour = task.workHour - task.doneHour
         while (taskWorkHour > 0) {
+
+          tmpWorkHour = taskDoneHour > tmpWorkHour ? 0 : tmpWorkHour - taskDoneHour
+          console.log(tmpWorkHour)
           if (tmpWorkHour > taskWorkHour) {
             tmpWorkHour = tmpWorkHour - taskWorkHour
             let taskInfo = this.$forkJson(task)
@@ -104,8 +126,10 @@ export default {
             taskInfo.assignHour = tmpWorkHour
             this.shareData.futureTaskList[day].push(taskInfo)
             day = this.getNextDay(day)
+            taskDoneHour = this.getDayTaskDoneHour(day)
+
             this.shareData.futureTaskList[day] = []
-            tmpWorkHour = this.workHour
+            tmpWorkHour = this.getDayWorkHour(day)
           }
         }
       }, this)
@@ -118,6 +142,22 @@ export default {
       } else {
         return newDay
       }
+    },
+    getDayTaskDoneHour(day) {
+      var taskDoneHour = 0
+      if (this.shareData.taskDone[day] != undefined) {
+        this.shareData.taskDone[day].forEach((td) => {
+          taskDoneHour = taskDoneHour + td.doneHour
+        })
+      }
+      return taskDoneHour
+    },
+    getDayWorkHour(day) {
+      var workHour = this.workHour
+      if (this.shareData.dayWorkHourKeyValue[day] != undefined) {
+        workHour = this.shareData.dayWorkHourKeyValue[day]['workHour']
+      }
+      return workHour
     },
     isWorkday(day) {
       var week = new Date(day).getDay()
@@ -143,9 +183,15 @@ export default {
         workdayArr: ['2020-11-14'],
         holidayKeyValue: {},
         holidayArr: ['2020-11-23'],
+        dayWorkHourKeyValue: {
+          '2020-11-16': [
+            { id: 1, day: '2020-11-16', workHour: 8, mark: '' }
+          ]
+        },
+        dayWorkHourArr: ['2020-11-23'],
         taskDone: {
           '2020-11-10': [
-            { id:1, taskid:1, name: '更改部分错误名字' }
+            { id: 1, taskId: 1, name: '更改部分错误名字', workHour: 8, mark: '', doneHour: 4 }
           ]
         },
         futureTaskList: {}
@@ -154,20 +200,21 @@ export default {
       workHour: 8,
       value: new Date(),
       newTask: [
-        { id: 1, name: '任务1任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 2, doneHour: 1 },
-        { id: 2, name: '任务2任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务12', workHour: 4, doneHour: 1 },
-        { id: 3, name: '任务3任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务13', workHour: 6, doneHour: 0 },
-        { id: 4, name: '任务4任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务14', workHour: 8, doneHour: 0 },
-        { id: 5, name: '任务5任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
-        { id: 6, name: '任务6任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
-        { id: 7, name: '任务7任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 20, doneHour: 0 },
-        { id: 8, name: '任务8任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 30, doneHour: 0 },
-        { id: 9, name: '任务9任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
-        { id: 10, name: '任务10任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
+        { id: 1, name: '任务1任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 2, doneHour: 1, taskDoneHistory: [] },
+        { id: 2, name: '任务2任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务12', workHour: 4, doneHour: 1, taskDoneHistory: [] },
+        { id: 3, name: '任务3任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务13', workHour: 6, doneHour: 0, taskDoneHistory: [] },
+        { id: 4, name: '任务4任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务14', workHour: 8, doneHour: 0, taskDoneHistory: [] },
+        { id: 5, name: '任务5任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
+        { id: 6, name: '任务6任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
+        { id: 7, name: '任务7任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 20, doneHour: 0, taskDoneHistory: [] },
+        { id: 8, name: '任务8任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 30, doneHour: 0, taskDoneHistory: [] },
+        { id: 9, name: '任务9任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
+        { id: 10, name: '任务10任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
       ],
       newTaskLevel: [10, 5, 4, 2, 6, 1, 3],
       workday: [{ day: '2020-11-14', mark: '端午节调休' }],
       holiday: [{ day: '2020-11-23', mark: '端午节放假' }],
+      dayWorkHour: [{ id: 1, day: '2020-11-24', workHour: 4, mark: '请假半天' }],
       defaultHoliday: [0, 6]
     }
   }

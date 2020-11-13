@@ -21,8 +21,8 @@
     </el-row>
     <el-row>
       <el-col :span='8' style="padding: 5px">
-        <el-button type="primary" style="width: 100%" @click="dialogVisibleNewWorkday= true">添加指定的日期工时</el-button>
-        <el-table :data="workday" border style="width: 100%">
+        <el-button type="primary" style="width: 100%" @click="dialogVisibleNewDayWorkHour= true">添加指定的日期工时</el-button>
+        <el-table :data="dayWorkHour" border style="width: 100%">
           <el-table-column label="序号" type="index">
           </el-table-column>
           <el-table-column prop="id" label="日期">
@@ -30,9 +30,9 @@
               {{scope.row.day}}
             </template>
           </el-table-column>
-          <el-table-column prop="mark" label="备注">
+          <el-table-column prop="mark" label="工时">
             <template slot-scope="scope">
-              {{scope.row.mark}}
+              {{scope.row.workHour}}
             </template>
           </el-table-column>
           <el-table-column label="">
@@ -87,19 +87,22 @@
         </el-table>
       </el-col>
     </el-row>
-    <el-dialog title="添加指定的工作日工时" :visible.sync="dialogVisibleNewWorkday" width="30%">
-      <el-form ref="form" :model="newWorkday" label-width="80px">
+    <el-dialog title="添加指定的工作日工时" :visible.sync="dialogVisibleNewDayWorkHour" width="30%">
+      <el-form ref="form" :model="newDayWorkHour" label-width="80px">
         <el-form-item label="工作日">
-          <el-date-picker value-format="yyyy-MM-dd" v-model="newWorkday.day" type="date" placeholder="选择日期">
+          <el-date-picker value-format="yyyy-MM-dd" v-model="newDayWorkHour.day" type="date" placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
+        <el-form-item label="工时">
+          <el-input-number :precision="1" :step="0.1" v-model="newDayWorkHour.workHour "></el-input-number>
+        </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="newWorkday.mark"></el-input>
+          <el-input v-model="newDayWorkHour.mark"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisibleNewWorkday = false">取 消</el-button>
-        <el-button type="primary" @click="m_addNewWorkday">确 定</el-button>
+        <el-button @click="dialogVisibleNewDayWorkHour = false">取 消</el-button>
+        <el-button type="primary" @click="m_addNewDayWorkHour">确 定</el-button>
       </span>
     </el-dialog>
     <el-dialog title="添加指定的工作日" :visible.sync="dialogVisibleNewWorkday" width="30%">
@@ -118,7 +121,7 @@
       </span>
     </el-dialog>
     <el-dialog title="添加指定的节假日" :visible.sync="dialogVisibleNewHoliday" width="30%">
-      <el-form ref="form" :model="newWorkday" label-width="80px">
+      <el-form ref="form" :model="newHoliday" label-width="80px">
         <el-form-item label="工作日">
           <el-date-picker value-format="yyyy-MM-dd" v-model="newHoliday.day" type="date" placeholder="选择日期">
           </el-date-picker>
@@ -153,6 +156,12 @@ export default {
         return []
       }
     },
+    dayWorkHour: {
+      type: Array,
+      default: function() {
+        return []
+      }
+    },
     defaultHoliday: {
       type: Array,
       default: function() {
@@ -164,6 +173,12 @@ export default {
     return {
       dialogVisibleNewWorkday: false,
       dialogVisibleNewHoliday: false,
+      dialogVisibleNewDayWorkHour: false,
+      newDayWorkHour: {
+        day: this.$formatDateTime(new Date(), 'yyyy-MM-dd'),
+        workHour: 8,
+        mark: ''
+      },
       newWorkday: {
         day: this.$formatDateTime(new Date(), 'yyyy-MM-dd'),
         mark: ''
@@ -191,6 +206,12 @@ export default {
   methods: {
     m_save() {
       this.$emit('onSetChange', this.form)
+    },
+    m_addNewDayWorkHour() {
+      var newDayWorkHour= this.$forkJson(this.newDayWorkHour)
+      this.dayWorkHour.push(newDayWorkHour)
+      this.$emit('onDayWorkHourFresh', newDayWorkHour)
+      this.dialogVisibleNewDayWorkHour = false
     },
     m_addNewWorkday() {
       var newWorkday = this.$forkJson(this.newWorkday)

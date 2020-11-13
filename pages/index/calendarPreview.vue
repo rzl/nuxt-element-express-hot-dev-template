@@ -11,6 +11,14 @@
               <div class="date-day">
                 {{ shareData.workdayKeyValue[data.day] !== undefined ? shareData.workdayKeyValue[data.day]['mark'] : '' }}
               </div>
+              <div class="future-date-task-done-color">
+                <div>
+                  {{ shareData.dayWorkHourKeyValue[data.day] !== undefined ? '当天工时：' + shareData.dayWorkHourKeyValue[data.day]['workHour'] : '' }}
+                </div>
+                <template v-for="(v, i) in shareData.taskDone[data.day]">
+                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.doneHour}} )</div>
+                </template>
+              </div>
               <div>
                 <template v-for="(v, i) in shareData.futureTaskList[data.day]">
                   <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.assignHour}} )</div>
@@ -23,7 +31,7 @@
               </p>
               <div>
                 <template v-for="(v, i) in shareData.taskDone[data.day]">
-                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.assignHour}} )</div>
+                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.doneHour}} )</div>
                 </template>
               </div>
             </div>
@@ -31,6 +39,11 @@
               <p :class="data.isSelected ? 'is-selected  date-day' : 'date-day'">
                 {{ data.day }} {{ data.isSelected ? '✔️' : ''}}
               </p>
+              <div class="future-date-task-done-color">
+                <template v-for="(v, i) in shareData.taskDone[data.day]">
+                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.doneHour}} )</div>
+                </template>
+              </div>
               <div>
                 <template v-for="(v, i) in shareData.futureTaskList[data.day]">
                   <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.assignHour}} )</div>
@@ -129,6 +142,12 @@ export default {
 
 .date-task {
   text-align: left;
+}
+
+.future-date-task-done-color {
+  /*  background-color: #f4f4f5;
+*/
+  color: #F56C6C;
 }
 
 .history-date {

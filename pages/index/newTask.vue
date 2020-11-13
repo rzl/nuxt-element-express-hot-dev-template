@@ -85,10 +85,10 @@
             <el-table :data="currentRowHistory" border style="width: 100%">
               <el-table-column label="序号" type="index">
               </el-table-column>
-              <el-table-column label="日期" width="140">
+              <el-table-column label="日期" width="150">
                 <template slot-scope="historyScope">
                   <div v-if="historyScope.row.$edit">
-                    <el-date-picker style="width: 120px;" value-format="yyyy-MM-dd" v-model="historyScope.row.day" type="date" placeholder="选择日期">
+                    <el-date-picker style="width: 130px;" value-format="yyyy-MM-dd" v-model="historyScope.row.day" type="date" placeholder="选择日期">
                     </el-date-picker>
                   </div>
                   <div v-else>{{historyScope.row.day}}</div>
@@ -112,10 +112,10 @@
               </el-table-column>
               <el-table-column label="" width="100">
                 <template slot-scope="historyScope">
-                  <el-button v-if="!historyScope.row.$edit" type="warning" icon="el-icon-edit" circle @click="m_deleteTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
-                  <el-button v-else type="primary" icon="el-icon-check" circle @click="m_deleteTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
+                  <el-button v-if="!historyScope.row.$edit" type="warning" icon="el-icon-edit" circle @click="m_editTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
+                  <el-button v-else type="primary" icon="el-icon-check" circle @click="m_saveTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
                   <el-button v-if="!historyScope.row.$edit" type="danger" icon="el-icon-delete" circle @click="m_deleteTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
-                  <el-button v-else type="danger" icon="el-icon-close" circle @click="m_deleteTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
+                  <el-button v-else type="danger" icon="el-icon-close" circle @click="m_cancelTaskHistory(historyScope,historyScope.row,historyScope.$index)"></el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -140,7 +140,7 @@ export default {
         return []
       }
     },
-    taskDone: {
+    shareData: {
       type: Object,
       default: function() {
         return {}
@@ -152,15 +152,62 @@ export default {
       newTaskRow: { id: 0, name: '新任务', workHour: 4, doneHour: 0, $level: 0 },
       dialogVisibleNewTaskForm: false,
       dialogVisibleWorkHour: false,
-      currentRow: {},
-      currentRowHistory: [
-        { day: '2020-11-03', doneHour: 4, mark: '' }
-      ]
+      currentRow: {
+      	taskDoneHistory: [
+	        { id:1, taskId:1, day: '2020-11-03', doneHour: 4, mark: '' }
+	      ]
+      },
+			currentRowHistory:[]
     }
   },
   methods: {
+  	m_editTaskHistory(scope, row, index) {
+  		var oldRow = this.$forkJson(row)
+  		delete oldRow.$edit
+  		row.$oldRow = oldRow
+  		this.$set(row, '$edit', true)
+  	},
+  	m_saveTaskHistory(scope, row, index) {
+  		console.log(row.id)
+  		if (row.id > 0) {
+  			this.shareData.taskDone[row.day].forEach((td) => {
+  				if (td.id === row.id) {
+  					td.doneHour = row.doneHour
+  				}
+  			})
+  		} else {
+  			row.id = index
+  			var newTaskDone = this.$forkJson(row)
+  			newTaskDone.name = this.currentRow.name
+  			newTaskDone.workHour = this.currentRow.workHour
+  			if (this.shareData.taskDone[row.day]!==undefined) {
+  				this.shareData.taskDone[row.day].push(newTaskDone)
+  			} else {
+  				this.$set(this.shareData.taskDone,row.day, [newTaskDone])
+  			}
+  		}
+  		var h = 0
+  		this.currentRow.taskDoneHistory.forEach((tdh) => {
+  			h = h + tdh.doneHour
+  		})
+  		this.currentRow.doneHour = h
+  		this.$emit('onFresh')
+  		row.$edit = false
+  	},
+  	m_cancelTaskHistory(scope, row, index) {
+  		if (row.id > 0) {
+  			row.$edit = false
+  			for (var x in row.$oldRow) {
+  				row[x] = row.$oldRow[x]
+  			}
+  			delete row.$oldRow
+  		} else {
+  		this.currentRowHistory.splice(index, 1)
+  		}
+  	},
     m_addTaskHistory() {
       var newTaskHistory = {
+      	taskId: this.currentRow.id,
         day: this.$formatDateTime(new Date(), 'yyyy-MM-dd'),
         doneHour: 4,
         mark: '',
@@ -169,8 +216,8 @@ export default {
       this.currentRowHistory.push(newTaskHistory)
 
     },
-    m_deleteTaskHistory() {
-
+    m_deleteTaskHistory(scope, row, index) {
+    	this.currentRowHistory.splice(index, 1)
     },
     m_addNewTaskRow() {
       this.dialogVisibleNewTaskForm = false
@@ -189,9 +236,7 @@ export default {
       this.currentRow = row
       this.currentRow['$level'] = this.newTaskLevel.indexOf(row.id)
       this.dialogVisibleWorkHour = true
-      console.log(scope)
-      row.name = "ad"
-      this.$emit('onFresh')
+      this.currentRowHistory = this.currentRow.taskDoneHistory
     },
     m_delete(scope, row, index) {
       this.newTask.splice(index, 1)
