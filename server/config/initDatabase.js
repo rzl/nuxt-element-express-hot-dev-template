@@ -19,41 +19,56 @@ module.exports = (models) => {
     var Permission = models.Permission
     var Role = models.Role
     Permission
-    .findOrCreate({where: { key: 'SUPERADMIN' }, defaults: {name: 'SUPERADMIN'}})
-    .then(([permission, created]) => {
-      permission.addRole(Role.build({id: 1})).then(() => {})
-      Permission.findOrCreate({where: { key: 'DEPARTMENTADMIN' }, defaults: {name: 'DEPARTMENTADMIN'}})
+      .findOrCreate({ where: { key: 'SUPERADMIN' }, defaults: { name: 'SUPERADMIN' } })
       .then(([permission, created]) => {
-        permission.addRoles(Role.build({id: 1}), Role.build({id: 2})).then(() => {})
-        Permission.findOrCreate({where: { key: 'SELFADMIN' }, defaults: {name: 'SELFADMIN'}})
-        .then(([permission, created]) => {
-          permission.addRoles([Role.build({id: 1}), Role.build({id: 2}), Role.build({id: 3})]).then(() => {})
-          cb(models)
-        })
+        permission.addRole(Role.build({ id: 1 })).then(() => {})
+        Permission.findOrCreate({ where: { key: 'DEPARTMENTADMIN' }, defaults: { name: 'DEPARTMENTADMIN' } })
+          .then(([permission, created]) => {
+            permission.addRoles(Role.build({ id: 1 }), Role.build({ id: 2 })).then(() => {})
+            Permission.findOrCreate({ where: { key: 'SELFADMIN' }, defaults: { name: 'SELFADMIN' } })
+              .then(([permission, created]) => {
+                permission.addRoles([Role.build({ id: 1 }), Role.build({ id: 2 }), Role.build({ id: 3 })]).then(() => {})
+                cb(models)
+              })
+          })
       })
-    })  
   }
 
   function createRole(models, cb) {
     var Role = models.Role
     Role
-    .findOrCreate({where: { id: 1 }, defaults: {name: 'SUPERADMIN'}})
-    .then(([role, created]) => {
-      Role.findOrCreate({where: { id: 2 }, defaults: {name: 'DEPARTMENTADMIN'}})
+      .findOrCreate({ where: { id: 1 }, defaults: { name: 'SUPERADMIN' } })
       .then(([role, created]) => {
-        Role.findOrCreate({where: { id: 3 }, defaults: {name: 'SELFADMIN'}})
-        .then(([role, created]) => {
-          console.log('权限初始化完成')
-          cb(models)
-        })
+        Role.findOrCreate({ where: { id: 2 }, defaults: { name: 'DEPARTMENTADMIN' } })
+          .then(([role, created]) => {
+            Role.findOrCreate({ where: { id: 3 }, defaults: { name: 'SELFADMIN' } })
+              .then(([role, created]) => {
+                console.log('权限初始化完成')
+                cb(models)
+              })
+          })
       })
-    }) 
+  }
+
+  function createDefaultConfig(models, cb) {
+    var defaultHoliday = [0, 6]
+    var Config = models.Config
+    Config
+      .findOrCreate({ where: { key: 'workHour' }, defaults: { value: '8' } }).then(() => {
+        Config
+          .findOrCreate({ where: { key: 'defaultHoliday' }, defaults: { value: JSON.stringify(defaultHoliday) } }).then(() => {
+            cb(models)
+          })
+      })
   }
 
   showMethods(models)
   createRole(models, (models) => {
     createPermission(models, () => {
-      console.log('权限初始化完成')
+      createDefaultConfig(models, () => {
+
+        console.log('权限初始化完成')
+      })
     })
   })
 }

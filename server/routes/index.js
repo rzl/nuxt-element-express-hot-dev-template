@@ -7,7 +7,7 @@ router.config = require(__dirname + '/../config/config.json');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express1111' });
+  res.render('index', { title: 'Express' });
 });
 
 module.exports = router;

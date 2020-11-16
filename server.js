@@ -10,8 +10,8 @@ var models = require('./server/models');
 /*models.sequelize.sync({ alter: true }).then(() => {
   console.log('sequelize init success')
   initDatabase(models)
-})*/
-
+})
+*/
 var app = express();
 
 app.set('views', path.join(__dirname, 'server/views'));
@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'server/public')));
 
-var useRouter = require('./server/routes/useRouter');
+var useRouter = require('./server/routes/useRouter.js');
 
 useRouter(app)
 

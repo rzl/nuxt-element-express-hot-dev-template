@@ -14,6 +14,12 @@ var table = {
   permission: require('./permission'),
   role: require('./role'),
   user: require('./user'),
+  holiday: require('./holiday'),
+  workday: require('./workday'),
+  dayWorkHour: require('./dayWorkHour'),
+  config: require('./config'),
+  newTask: require('./newTask'),
+  taskDoneHistory: require('./taskDoneHistory'),
   /*permissionRole: require('./permissionRole')*/
 }
 

@@ -27,13 +27,21 @@ export default {
     workSet
   },
   mounted() {
-
+    this.m_getConfig(() => {
     this.m_resolveDayWorkHour()
     this.m_resolveWorkday()
     this.m_resolveHoliday()
     this.freshFutureTaskList()
+    })
+
   },
   methods: {
+    m_getConfig(cb) {
+      this.$axios.get('/api/task/config').then((res) => {
+        console.log(res)
+      cb()
+      })
+    },
     m_resolveDayWorkHour() {
       this.shareData.dayWorkHourArr = []
       this.shareData.dayWorkHourKeyValue = {}

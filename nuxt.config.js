@@ -26,6 +26,7 @@ var config =  {
   plugins: [
     '@/plugins/element-ui',
     '@/plugins/utils',
+    '@/plugins/axios',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)
