@@ -3,7 +3,7 @@
     <el-row>
       <el-form ref="form" label-width="120px">
         <el-form-item label="每天工时">
-          <el-input v-model="form.workHour"></el-input>
+          <el-input type="number" v-model="form.workHour"></el-input>
         </el-form-item>
         <el-form-item label="默认休息日">
           <el-checkbox-group class="week-checkbox-group" v-model="form.defaultHoliday">
@@ -205,7 +205,12 @@ export default {
   },
   methods: {
     m_save() {
-      this.$emit('onSetChange', this.form)
+      this.$axios.put('/api/task/config', this.form, {defaultShow: false}).then((res) => {
+        console.log(this.form)
+        this.$emit('onSetChange', this.form)
+      }).catch((e) => {
+        console.log(e.message)
+      })
     },
     m_addNewDayWorkHour() {
       var newDayWorkHour= this.$forkJson(this.newDayWorkHour)
@@ -225,6 +230,14 @@ export default {
       this.$emit('onHolidayFresh', newHoliday)
       this.dialogVisibleNewHoliday = false
 
+    }
+  },
+  watch: {
+    workHour: function(n, o) {
+      this.form.workHour = n
+    },
+    defaultHoliday: function(n, o) {
+      this.form.defaultHoliday = n
     }
   }
 }

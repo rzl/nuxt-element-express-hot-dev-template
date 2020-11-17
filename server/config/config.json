@@ -19,7 +19,8 @@
     "database": "fff",
     "host": "127.0.0.1",
     "port": "23306",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "timezone": "+08:00"
   },  
   "production": {
     "username": "root",
@@ -27,7 +28,8 @@
     "database": "fff",
     "host": "127.0.0.1",
     "port": "23306",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "timezone": "+08:00"
   },
   "app": {
     "jsonwebtokensecret": "jsonwebtokensecret"

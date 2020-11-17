@@ -134,12 +134,6 @@ export default {
         return []
       }
     },
-    newTaskLevel: {
-      type: Array,
-      default: function() {
-        return []
-      }
-    },
     shareData: {
       type: Object,
       default: function() {
@@ -153,61 +147,67 @@ export default {
       dialogVisibleNewTaskForm: false,
       dialogVisibleWorkHour: false,
       currentRow: {
-      	taskDoneHistory: [
-	        { id:1, taskId:1, day: '2020-11-03', doneHour: 4, mark: '' }
-	      ]
+        taskDoneHistory: [
+          { id: 1, taskId: 1, day: '2020-11-03', doneHour: 4, mark: '' }
+        ]
       },
-			currentRowHistory:[]
+      currentRowHistory: []
     }
   },
   methods: {
-  	m_editTaskHistory(scope, row, index) {
-  		var oldRow = this.$forkJson(row)
-  		delete oldRow.$edit
-  		row.$oldRow = oldRow
-  		this.$set(row, '$edit', true)
-  	},
-  	m_saveTaskHistory(scope, row, index) {
-  		console.log(row.id)
-  		if (row.id > 0) {
-  			this.shareData.taskDone[row.day].forEach((td) => {
-  				if (td.id === row.id) {
-  					td.doneHour = row.doneHour
-  				}
-  			})
-  		} else {
-  			row.id = index
-  			var newTaskDone = this.$forkJson(row)
-  			newTaskDone.name = this.currentRow.name
-  			newTaskDone.workHour = this.currentRow.workHour
-  			if (this.shareData.taskDone[row.day]!==undefined) {
-  				this.shareData.taskDone[row.day].push(newTaskDone)
-  			} else {
-  				this.$set(this.shareData.taskDone,row.day, [newTaskDone])
-  			}
-  		}
-  		var h = 0
-  		this.currentRow.taskDoneHistory.forEach((tdh) => {
-  			h = h + tdh.doneHour
-  		})
-  		this.currentRow.doneHour = h
-  		this.$emit('onFresh')
-  		row.$edit = false
-  	},
-  	m_cancelTaskHistory(scope, row, index) {
-  		if (row.id > 0) {
-  			row.$edit = false
-  			for (var x in row.$oldRow) {
-  				row[x] = row.$oldRow[x]
-  			}
-  			delete row.$oldRow
-  		} else {
-  		this.currentRowHistory.splice(index, 1)
-  		}
-  	},
+
+    api_updateNewTaskLevel() {
+      this.$axios.post('/api/task/newTaskLevel', this.shareData.newTaskLevelArr).then((res) => {
+
+      })
+    },
+    m_editTaskHistory(scope, row, index) {
+      var oldRow = this.$forkJson(row)
+      delete oldRow.$edit
+      row.$oldRow = oldRow
+      this.$set(row, '$edit', true)
+    },
+    m_saveTaskHistory(scope, row, index) {
+      console.log(row.id)
+      if (row.id > 0) {
+        this.shareData.taskDone[row.day].forEach((td) => {
+          if (td.id === row.id) {
+            td.doneHour = row.doneHour
+          }
+        })
+      } else {
+        row.id = index
+        var newTaskDone = this.$forkJson(row)
+        newTaskDone.name = this.currentRow.name
+        newTaskDone.workHour = this.currentRow.workHour
+        if (this.shareData.taskDone[row.day] !== undefined) {
+          this.shareData.taskDone[row.day].push(newTaskDone)
+        } else {
+          this.$set(this.shareData.taskDone, row.day, [newTaskDone])
+        }
+      }
+      var h = 0
+      this.currentRow.taskDoneHistory.forEach((tdh) => {
+        h = h + tdh.doneHour
+      })
+      this.currentRow.doneHour = h
+      this.$emit('onFresh')
+      row.$edit = false
+    },
+    m_cancelTaskHistory(scope, row, index) {
+      if (row.id > 0) {
+        row.$edit = false
+        for (var x in row.$oldRow) {
+          row[x] = row.$oldRow[x]
+        }
+        delete row.$oldRow
+      } else {
+        this.currentRowHistory.splice(index, 1)
+      }
+    },
     m_addTaskHistory() {
       var newTaskHistory = {
-      	taskId: this.currentRow.id,
+        taskId: this.currentRow.id,
         day: this.$formatDateTime(new Date(), 'yyyy-MM-dd'),
         doneHour: 4,
         mark: '',
@@ -217,16 +217,22 @@ export default {
 
     },
     m_deleteTaskHistory(scope, row, index) {
-    	this.currentRowHistory.splice(index, 1)
+      this.currentRowHistory.splice(index, 1)
     },
     m_addNewTaskRow() {
       this.dialogVisibleNewTaskForm = false
       var newTaskRow = JSON.parse(JSON.stringify(this.newTaskRow))
-      var i = this.newTask.push(newTaskRow)
-      newTaskRow.id = i
-      this.newTaskLevel.splice(newTaskRow.$level, 0, newTaskRow.id)
-      console.log(this.newTaskLevel)
-      this.$emit('onFresh')
+      this.$axios.post('/api/task/newTask', newTaskRow).then((res) => {
+        console.log(this)
+        var i = this.newTask.push(newTaskRow)
+        newTaskRow.id = res.data.id
+        this.shareData.newTaskLevelArr.splice(newTaskRow.$level, 0, newTaskRow.id)
+        this.api_updateNewTaskLevel()
+
+        console.log(this.shareData.newTaskLevelArr)
+        this.$emit('onFresh')
+      })
+
     },
     m_openNewTaskForm() {
       this.newTaskRow.$level = this.newTask.length
@@ -234,15 +240,26 @@ export default {
     },
     m_workHour(scope, row, index) {
       this.currentRow = row
-      this.currentRow['$level'] = this.newTaskLevel.indexOf(row.id)
+      this.currentRow['$level'] = this.shareData.newTaskLevelArr.indexOf(row.id)
       this.dialogVisibleWorkHour = true
       this.currentRowHistory = this.currentRow.taskDoneHistory
     },
     m_delete(scope, row, index) {
-      this.newTask.splice(index, 1)
-      let i = this.newTaskLevel.indexOf(row.id)
-      if (i > 0) { this.newTaskLevel.splice(i, 1) }
-      this.$emit('onFresh')
+      console.log(row)
+      this.$confirm('此操作将永久删除, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$axios.delete('/api/task/newTask', { params: { id: row.id } }).then((res) => {
+          this.newTask.splice(index, 1)
+          let i = this.shareData.newTaskLevelArr.indexOf(row.id)
+          if (i > 0) { this.shareData.newTaskLevelArr.splice(i, 1) }
+          this.api_updateNewTaskLevel()
+          this.$emit('onFresh')
+        })
+      })
+
     },
     m_openEditTaskForm(scope, row, index) {
       this.dialogVisibleNewTaskForm = true
@@ -250,22 +267,30 @@ export default {
       for (var x in this.newTaskRow) {
         this.newTaskRow[x] = row[x]
       }
-      this.newTaskRow['$level'] = this.newTaskLevel.indexOf(row.id)
+      this.newTaskRow['$level'] = this.shareData.newTaskLevelArr.indexOf(row.id)
     },
     m_editNewTaskRow() {
       this.dialogVisibleNewTaskForm = false
-      for (var x in this.currentRow.row) {
+      for (var x in this.currentRow) {
         if (this.newTaskRow[x] !== undefined) {
-          this.currentRow.row[x] = this.newTaskRow[x]
+          this.currentRow[x] = this.newTaskRow[x]
         }
       }
+      console.log(this.currentRow)
+      this.$axios.put('/api/task/newTask', this.currentRow).then((res) => {
+        var lastLevel = this.shareData.newTaskLevelArr.indexOf(this.currentRow.id)
+        if (this.newTaskRow.$level !== lastLevel) {
+          console.log(this.shareData.newTaskLevelArr)
+          if (lastLevel != -1) {
+            this.shareData.newTaskLevelArr.splice(lastLevel, 1)
+          }
+          this.shareData.newTaskLevelArr.splice(this.newTaskRow.$level, 0, this.currentRow.id)
+          this.api_updateNewTaskLevel()
+        }
 
-      var lastLevel = this.newTaskLevel.indexOf(this.currentRow.id)
-      if (this.newTaskRow.$level !== lastLevel) {
-        this.newTaskLevel.splice(lastLevel, 1)
-        this.newTaskLevel.splice(this.newTaskRow.$level, 0, this.currentRow.id)
-      }
-      this.$emit('onFresh')
+        this.$emit('onFresh')
+      })
+
     },
     swapArray(arr, index1, index2) {
       arr[index1] = arr.splice(index2, 1, arr[index1])[0];
@@ -286,16 +311,17 @@ export default {
       }
     },
     m_upNewTaskLevel(scope, row, index) {
-      var i = this.newTaskLevel.indexOf(row.id)
+      var i = this.shareData.newTaskLevelArr.indexOf(row.id)
       if (i < 0) return this.$message.error('该任务未设置优先级')
-      this.moveup(this.newTaskLevel, i, this.newTaskLevel.length)
+      this.moveup(this.shareData.newTaskLevelArr, i, this.shareData.newTaskLevelArr.length)
+      this.api_updateNewTaskLevel()
       this.$emit('onFresh')
     },
     m_downNewTaskLevel(scope, row, index) {
-      var i = this.newTaskLevel.indexOf(row.id)
+      var i = this.shareData.newTaskLevelArr.indexOf(row.id)
       if (i < 0) return this.$message.error('该任务未设置优先级')
-
-      this.movedown(this.newTaskLevel, i, this.newTaskLevel.length)
+      this.movedown(this.shareData.newTaskLevelArr, i, this.shareData.newTaskLevelArr.length)
+      this.api_updateNewTaskLevel()
       this.$emit('onFresh')
     }
   }

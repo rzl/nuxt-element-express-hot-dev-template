@@ -86,12 +86,6 @@ export default {
         return []
       }
     },
-    newTaskLevel: {
-      type: Array,
-      default: function() {
-        return []
-      }
-    },
     defaultHoliday: {
       type: Array,
       default: function() {

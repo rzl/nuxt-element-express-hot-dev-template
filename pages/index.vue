@@ -2,11 +2,11 @@
   <div class="container">
     <el-tabs style="width: 100%" v-model="activeName" type="card" @tab-click="handleClick">
       <el-tab-pane label="任务预览" name="calendarPreview">
-        <calendarPreview :shareData="shareData" :newTask="newTask" :newTaskLevel="newTaskLevel" :defaultHoliday="defaultHoliday">
+        <calendarPreview :shareData="shareData" :newTask="newTask" :defaultHoliday="defaultHoliday">
         </calendarPreview>
       </el-tab-pane>
       <el-tab-pane label="任务列表" name="newTask">
-        <newTask :shareData="shareData" :newTaskLevel='newTaskLevel' :newTask="newTask" @onFresh="m_fresh">
+        <newTask :shareData="shareData" :newTask="newTask" @onFresh="m_fresh">
         </newTask>
       </el-tab-pane>
       <el-tab-pane label="假期设定" name="third">
@@ -27,20 +27,48 @@ export default {
     workSet
   },
   mounted() {
-    this.m_getConfig(() => {
-    this.m_resolveDayWorkHour()
-    this.m_resolveWorkday()
-    this.m_resolveHoliday()
-    this.freshFutureTaskList()
+    this.api_getConfig((res) => {
+      res.data.forEach((d) => {
+        this[d.key] = d.value
+      })
+      this.api_getNewTask((res) => {
+        this.newTask = res.data
+        this.api_getNewTaskLevel((res) => {
+          this.newTaskLevel = JSON.parse(res.data.value)
+          this.m_resolveDayWorkHour()
+          this.m_resolveWorkday()
+          this.m_resolveHoliday()
+          this.m_resolveNewTaskLevel()
+          this.freshFutureTaskList()
+        })
+
+      })
     })
 
   },
   methods: {
-    m_getConfig(cb) {
+    api_getConfig(cb) {
       this.$axios.get('/api/task/config').then((res) => {
-        console.log(res)
-      cb()
+        cb(res)
       })
+    },
+    api_getNewTask(cb) {
+      this.$axios.get('/api/task/newTask').then((res) => {
+        cb(res)
+      })
+    },
+    api_getNewTaskLevel(cb) {
+      this.$axios.get('/api/task/newTaskLevel').then((res) => {
+        cb(res)
+      })
+    },
+    m_resolveNewTaskLevel() {
+      this.shareData.newTaskLevelArr = this.newTaskLevel
+      /*this.newTaskLevel.sort((a, b) => { a.level - b.level })
+      this.shareData.newTaskLevelArr = this.newTaskLevel.map((ntl) => {
+        return ntl.newTaskId
+      })*/
+      console.log()
     },
     m_resolveDayWorkHour() {
       this.shareData.dayWorkHourArr = []
@@ -80,7 +108,7 @@ export default {
       this.freshFutureTaskList()
     },
     m_setChange(v) {
-      this.workHour = v.workHour
+      this.workHour = parseInt(v.workHour)
       this.defaultHoliday = v.defaultHoliday
       this.freshFutureTaskList()
     },
@@ -93,8 +121,8 @@ export default {
     freshFutureTaskList() {
       this.shareData.futureTaskList = {}
       var taskList = this.newTask.sort((a, b) => {
-        var ai = this.newTaskLevel.indexOf(a.id)
-        var bi = this.newTaskLevel.indexOf(b.id)
+        var ai = this.shareData.newTaskLevelArr.indexOf(a.id)
+        var bi = this.shareData.newTaskLevelArr.indexOf(b.id)
         if (ai >= 0) {
           if (bi < 0) {
             return -1
@@ -121,7 +149,7 @@ export default {
         while (taskWorkHour > 0) {
 
           tmpWorkHour = taskDoneHour > tmpWorkHour ? 0 : tmpWorkHour - taskDoneHour
-          console.log(tmpWorkHour)
+          //  console.log(tmpWorkHour)
           if (tmpWorkHour > taskWorkHour) {
             tmpWorkHour = tmpWorkHour - taskWorkHour
             let taskInfo = this.$forkJson(task)
@@ -187,6 +215,7 @@ export default {
   data() {
     return {
       shareData: {
+        newTaskLevelArr: [],
         workdayKeyValue: {},
         workdayArr: ['2020-11-14'],
         holidayKeyValue: {},
@@ -219,7 +248,7 @@ export default {
         { id: 9, name: '任务9任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
         { id: 10, name: '任务10任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
       ],
-      newTaskLevel: [10, 5, 4, 2, 6, 1, 3],
+      newTaskLevel: [],
       workday: [{ day: '2020-11-14', mark: '端午节调休' }],
       holiday: [{ day: '2020-11-23', mark: '端午节放假' }],
       dayWorkHour: [{ id: 1, day: '2020-11-24', workHour: 4, mark: '请假半天' }],

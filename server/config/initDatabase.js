@@ -57,7 +57,10 @@ module.exports = (models) => {
       .findOrCreate({ where: { key: 'workHour' }, defaults: { value: '8' } }).then(() => {
         Config
           .findOrCreate({ where: { key: 'defaultHoliday' }, defaults: { value: JSON.stringify(defaultHoliday) } }).then(() => {
-            cb(models)
+            Config
+              .findOrCreate({ where: { key: 'newTaskLevel' }, defaults: { value: JSON.stringify([]) } }).then(() => {
+                cb(models)
+              })
           })
       })
   }
@@ -66,7 +69,6 @@ module.exports = (models) => {
   createRole(models, (models) => {
     createPermission(models, () => {
       createDefaultConfig(models, () => {
-
         console.log('权限初始化完成')
       })
     })

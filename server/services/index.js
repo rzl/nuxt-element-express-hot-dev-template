@@ -1,7 +1,8 @@
-var task = require('./taskService')
+var newTask = require('./newTaskService')
 var config = require('./configService')
 
 module.exports = {
-	task,
+	newTask,
 	config
+	
 }
