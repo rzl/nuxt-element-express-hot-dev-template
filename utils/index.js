@@ -23,5 +23,17 @@ export function formatDateTime(datetime, fmt) {
 }
 
 export function forkJson(obj) {
-  return JSON.parse(JSON.stringify(obj))
+  var cache = [];
+  return JSON.parse(JSON.stringify(obj, function(key, value) {
+    if (typeof value === 'object' && value !== null) {
+        if (cache.indexOf(value) !== -1) {
+            // 移除
+            return;
+        }
+        // 收集所有的值
+        cache.push(value);
+    }
+    return value;
+  }))
+  cache = null
 }

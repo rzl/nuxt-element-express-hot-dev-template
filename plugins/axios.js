@@ -23,7 +23,7 @@ export default function(app) {
     /*if (res.headers.refreshtoken) {
       Cookie.set('token', res.headers.refreshtoken)
     }*/
-    res.data.$res = res
+    
     var r = res.data
     if (r.code === 0) {
       if (res.config.disableMsg !== true) {
@@ -43,18 +43,19 @@ export default function(app) {
           duration: 5 * 1000
         })
       }
-      return Promise.reject(new Error(r.msg))
+      return Promise.reject(res)
     }
+    res.data.$res = res
     return res.data
   })
 
   // 错误回调
   axios.onError((error) => {
-
-    switch (error.response.status) {
+    console.log(error)
+/*    switch (error.response.status) {
       case 401:
         location.href = '/login'
         break
-    }
+    }*/
   })
 }

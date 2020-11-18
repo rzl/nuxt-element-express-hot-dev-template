@@ -27,48 +27,72 @@ export default {
     workSet
   },
   mounted() {
-    this.api_getConfig((res) => {
-      res.data.forEach((d) => {
-        this[d.key] = d.value
-      })
-      this.api_getNewTask((res) => {
-        this.newTask = res.data
-        this.api_getNewTaskLevel((res) => {
-          this.newTaskLevel = JSON.parse(res.data.value)
-          this.m_resolveDayWorkHour()
-          this.m_resolveWorkday()
-          this.m_resolveHoliday()
-          this.m_resolveNewTaskLevel()
-          this.freshFutureTaskList()
-        })
-
-      })
+    this.m_getData(() => {
+      this.m_resolveTaskDoneHistory()
+      this.m_resolveDayWorkHour()
+      this.m_resolveWorkday()
+      this.m_resolveHoliday()
+      this.m_resolveNewTaskLevel()
+      this.freshFutureTaskList()
     })
-
   },
   methods: {
+    async m_getData(cb) {
+      try {
+        var res
+        res = await this.api_getConfig()
+        res.data.forEach((d) => {
+          this[d.key] = d.value
+        })
+        res = await this.api_getNewTask()
+        this.newTask = res.data
+        res = await this.api_getNewTaskLevel()
+        this.newTaskLevel = JSON.parse(res.data.value)
+        res = await this.api_getHoliday()
+        this.holiday = res.data
+        res = await this.api_getWorkday()
+        this.workday = res.data
+        res = await this.api_getDayWorkHour()
+        this.dayWorkHour = res.data  
+        res = await this.api_getTaskDoneHistory()
+        this.taskDoneHistory = res.data
+      } catch (e) {
+        this.$message.error(e.message)
+      }
+      cb()
+    },
+    api_getTaskDoneHistory() {
+      return this.$axios.get('/api/task/taskDoneHistory')
+    },    
+    api_getDayWorkHour() {
+      return this.$axios.get('/api/task/dayWorkHour')
+    },
+    api_getWorkday() {
+      return this.$axios.get('/api/task/workday')
+    },
+    api_getHoliday() {
+      return this.$axios.get('/api/task/holiday')
+    },
     api_getConfig(cb) {
-      this.$axios.get('/api/task/config').then((res) => {
-        cb(res)
-      })
+      return this.$axios.get('/api/task/config')
     },
     api_getNewTask(cb) {
-      this.$axios.get('/api/task/newTask').then((res) => {
-        cb(res)
-      })
+      return this.$axios.get('/api/task/newTask')
     },
     api_getNewTaskLevel(cb) {
-      this.$axios.get('/api/task/newTaskLevel').then((res) => {
-        cb(res)
-      })
+      return this.$axios.get('/api/task/newTaskLevel')
+    },
+    m_resolveTaskDoneHistory() {
+      this.taskDoneHistory.forEach((tdh) => {
+        if (this.shareData.taskDone[tdh.day] !== undefined) {
+            this.shareData.taskDone[tdh.day].push(tdh)
+          } else {
+            this.$set(this.shareData.taskDone, tdh.day, [tdh])
+          }
+      }, this)
     },
     m_resolveNewTaskLevel() {
       this.shareData.newTaskLevelArr = this.newTaskLevel
-      /*this.newTaskLevel.sort((a, b) => { a.level - b.level })
-      this.shareData.newTaskLevelArr = this.newTaskLevel.map((ntl) => {
-        return ntl.newTaskId
-      })*/
-      console.log()
     },
     m_resolveDayWorkHour() {
       this.shareData.dayWorkHourArr = []
@@ -146,10 +170,12 @@ export default {
       this.shareData.futureTaskList[day] = []
       taskList.forEach((task) => {
         var taskWorkHour = task.workHour - task.doneHour
+        console.log('当日工时 ' + tmpWorkHour +' 当日已用工时 '  + taskDoneHour + ' 任务剩余工时 '+taskWorkHour,task)
         while (taskWorkHour > 0) {
 
           tmpWorkHour = taskDoneHour > tmpWorkHour ? 0 : tmpWorkHour - taskDoneHour
-          //  console.log(tmpWorkHour)
+          taskDoneHour = 0
+            console.log(tmpWorkHour)
           if (tmpWorkHour > taskWorkHour) {
             tmpWorkHour = tmpWorkHour - taskWorkHour
             let taskInfo = this.$forkJson(task)
@@ -227,27 +253,26 @@ export default {
         },
         dayWorkHourArr: ['2020-11-23'],
         taskDone: {
-          '2020-11-10': [
-            { id: 1, taskId: 1, name: '更改部分错误名字', workHour: 8, mark: '', doneHour: 4 }
-          ]
+
         },
         futureTaskList: {}
       },
-      activeName: 'newTask',
+      activeName: 'calendarPreview',
       workHour: 8,
       value: new Date(),
       newTask: [
-        { id: 1, name: '任务1任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 2, doneHour: 1, taskDoneHistory: [] },
-        { id: 2, name: '任务2任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务12', workHour: 4, doneHour: 1, taskDoneHistory: [] },
-        { id: 3, name: '任务3任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务13', workHour: 6, doneHour: 0, taskDoneHistory: [] },
-        { id: 4, name: '任务4任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务14', workHour: 8, doneHour: 0, taskDoneHistory: [] },
-        { id: 5, name: '任务5任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
-        { id: 6, name: '任务6任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
-        { id: 7, name: '任务7任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 20, doneHour: 0, taskDoneHistory: [] },
-        { id: 8, name: '任务8任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 30, doneHour: 0, taskDoneHistory: [] },
-        { id: 9, name: '任务9任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
-        { id: 10, name: '任务10任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0, taskDoneHistory: [] },
+        { id: 1, name: '任务1任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 2, doneHour: 1 },
+        { id: 2, name: '任务2任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务12', workHour: 4, doneHour: 1 },
+        { id: 3, name: '任务3任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务13', workHour: 6, doneHour: 0 },
+        { id: 4, name: '任务4任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务14', workHour: 8, doneHour: 0 },
+        { id: 5, name: '任务5任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
+        { id: 6, name: '任务6任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
+        { id: 7, name: '任务7任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 20, doneHour: 0 },
+        { id: 8, name: '任务8任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 30, doneHour: 0 },
+        { id: 9, name: '任务9任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
+        { id: 10, name: '任务10任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务任务1', workHour: 10, doneHour: 0 },
       ],
+      taskDoneHistory: [],
       newTaskLevel: [],
       workday: [{ day: '2020-11-14', mark: '端午节调休' }],
       holiday: [{ day: '2020-11-23', mark: '端午节放假' }],

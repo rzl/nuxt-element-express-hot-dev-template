@@ -16,7 +16,7 @@
                   {{ shareData.dayWorkHourKeyValue[data.day] !== undefined ? '当天工时：' + shareData.dayWorkHourKeyValue[data.day]['workHour'] : '' }}
                 </div>
                 <template v-for="(v, i) in shareData.taskDone[data.day]">
-                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.doneHour}} )</div>
+                  <div class="date-task" :key="i">{{i+1}} . {{v.newTask.name}} ( {{v.newTask.workHour}} ) ( {{v.doneHour}} )</div>
                 </template>
               </div>
               <div>
@@ -31,7 +31,7 @@
               </p>
               <div>
                 <template v-for="(v, i) in shareData.taskDone[data.day]">
-                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.doneHour}} )</div>
+                  <div class="date-task" :key="i">{{i+1}} . {{v.newTask.name}} ( {{v.newTask.workHour}} ) ( {{v.doneHour}} )</div>
                 </template>
               </div>
             </div>
@@ -41,7 +41,7 @@
               </p>
               <div class="future-date-task-done-color">
                 <template v-for="(v, i) in shareData.taskDone[data.day]">
-                  <div class="date-task" :key="i">{{i+1}} . {{v.name}} ( {{v.workHour}} ) ( {{v.doneHour}} )</div>
+                  <div class="date-task" :key="i">{{i+1}} . {{v.newTask.name}} ( {{v.newTask.workHour}} ) ( {{v.doneHour}} )</div>
                 </template>
               </div>
               <div>

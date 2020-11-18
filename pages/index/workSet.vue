@@ -37,7 +37,7 @@
           </el-table-column>
           <el-table-column label="">
             <template slot-scope="scope">
-              <el-button type="danger" icon="el-icon-delete" circle></el-button>
+              <el-button type="danger" icon="el-icon-delete" circle @click="m_deleteDayWorkHour(scope,scope.row,scope.$index)"></el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -59,7 +59,7 @@
           </el-table-column>
           <el-table-column label="">
             <template slot-scope="scope">
-              <el-button type="danger" icon="el-icon-delete" circle></el-button>
+              <el-button type="danger" icon="el-icon-delete" circle @click="m_deleteWorkday(scope,scope.row,scope.$index)"></el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -81,7 +81,7 @@
           </el-table-column>
           <el-table-column label="">
             <template slot-scope="scope">
-              <el-button type="danger" icon="el-icon-delete" circle></el-button>
+              <el-button type="danger" icon="el-icon-delete" circle @click="m_deleteHoliday(scope,scope.row,scope.$index)"></el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -205,7 +205,7 @@ export default {
   },
   methods: {
     m_save() {
-      this.$axios.put('/api/task/config', this.form, {defaultShow: false}).then((res) => {
+      this.$axios.put('/api/task/config', this.form, { defaultShow: false }).then((res) => {
         console.log(this.form)
         this.$emit('onSetChange', this.form)
       }).catch((e) => {
@@ -213,23 +213,62 @@ export default {
       })
     },
     m_addNewDayWorkHour() {
-      var newDayWorkHour= this.$forkJson(this.newDayWorkHour)
-      this.dayWorkHour.push(newDayWorkHour)
-      this.$emit('onDayWorkHourFresh', newDayWorkHour)
-      this.dialogVisibleNewDayWorkHour = false
+      var newDayWorkHour = this.$forkJson(this.newDayWorkHour)
+      this.$axios.post('/api/task/dayWorkHour', newDayWorkHour).then((res) => {
+        newDayWorkHour.id = res.data.id
+        this.dayWorkHour.push(newDayWorkHour)
+        this.$emit('onDayWorkHourFresh', newDayWorkHour)
+        this.dialogVisibleNewDayWorkHour = false
+      })
     },
     m_addNewWorkday() {
       var newWorkday = this.$forkJson(this.newWorkday)
-      this.workday.push(newWorkday)
-      this.$emit('onWorkdayFresh', newWorkday)
-      this.dialogVisibleNewWorkday = false
+      this.$axios.post('/api/task/workday', newWorkday).then((res) => {
+        newWorkday.id = res.data.id
+        this.workday.push(newWorkday)
+        this.$emit('onWorkdayFresh', newWorkday)
+        this.dialogVisibleNewWorkday = false
+      })
     },
     m_addNewHoliday() {
       var newHoliday = this.$forkJson(this.newHoliday)
-      this.holiday.push(newHoliday)
-      this.$emit('onHolidayFresh', newHoliday)
-      this.dialogVisibleNewHoliday = false
-
+      this.$axios.post('/api/task/holiday', newHoliday).then((res) => {
+        newHoliday.id = res.data.id
+        this.holiday.push(newHoliday)
+        this.$emit('onHolidayFresh', newHoliday)
+        this.dialogVisibleNewHoliday = false
+      })
+    },
+    beforeDelete(cb) {
+      this.$confirm('此操作将永久删除, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => { cb() })
+    },
+    m_deleteHoliday(scope, row, index) {
+      this.beforeDelete(() => {
+        this.$axios.delete('/api/task/holiday', { params: { id: row.id } }).then(() => {
+          this.holiday.splice(index, 1)
+          this.$emit('onHolidayFresh')
+        })
+      })
+    },
+    m_deleteWorkday(scope, row, index) {
+      this.beforeDelete(() => {
+        this.$axios.delete('/api/task/workday', { params: { id: row.id } }).then(() => {
+          this.workday.splice(index, 1)
+          this.$emit('onWorkdayFresh')
+        })
+      })
+    },
+    m_deleteDayWorkHour(scope, row, index) {
+      this.beforeDelete(() => {
+        this.$axios.delete('/api/task/dayWorkHour', { params: { id: row.id } }).then(() => {
+          this.dayWorkHour.splice(index, 1)
+          this.$emit('onDayWorkHourFresh')
+        })
+      })
     }
   },
   watch: {

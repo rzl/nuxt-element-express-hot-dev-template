@@ -7,10 +7,10 @@ var logger = require('morgan');
 var initDatabase = require('./server/config/initDatabase.js')
 var models = require('./server/models');
 
-// models.sequelize.sync({ alter: true }).then(() => {
-//   console.log('sequelize init success')
-//   initDatabase(models)
-// })
+models.sequelize.sync({ alter: true }).then(() => {
+  console.log('sequelize init success')
+  initDatabase(models)
+})
 
 var app = express();
 

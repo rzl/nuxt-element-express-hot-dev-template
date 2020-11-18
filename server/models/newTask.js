@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   NewTask.associate = function(models) {
     // associations can be defined here
-    models.NewTask.hasMany(models.TaskDoneHistory, { as: 'newTaskDoneHistory' })
+    models.NewTask.hasMany(models.TaskDoneHistory, { as: 'newTaskDoneHistory',foreignKey: 'newTaskId' })
   };
   return NewTask;
 };

@@ -161,6 +161,18 @@ export default {
 
       })
     },
+    api_updateNewTaskDoneHour(newTaskId, doneHour) {
+      this.$axios.put('/api/task/newTask/' + newTaskId, { id: newTaskId, doneHour: doneHour }).then((res) => {
+
+      })
+    },
+    beforeDelete(cb) {
+      this.$confirm('此操作将永久删除, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => { cb() })
+    },
     m_editTaskHistory(scope, row, index) {
       var oldRow = this.$forkJson(row)
       delete oldRow.$edit
@@ -169,28 +181,35 @@ export default {
     },
     m_saveTaskHistory(scope, row, index) {
       console.log(row.id)
+
       if (row.id > 0) {
-        this.shareData.taskDone[row.day].forEach((td) => {
-          if (td.id === row.id) {
-            td.doneHour = row.doneHour
-          }
+        this.$axios.put('/api/task/taskDoneHistory', row).then((res) => {
+          this.shareData.taskDone[row.day].forEach((td) => {
+            if (td.id === row.id) {
+              td.doneHour = row.doneHour
+            }
+          })
         })
       } else {
-        row.id = index
-        var newTaskDone = this.$forkJson(row)
-        newTaskDone.name = this.currentRow.name
-        newTaskDone.workHour = this.currentRow.workHour
-        if (this.shareData.taskDone[row.day] !== undefined) {
-          this.shareData.taskDone[row.day].push(newTaskDone)
-        } else {
-          this.$set(this.shareData.taskDone, row.day, [newTaskDone])
-        }
+        this.$axios.post('/api/task/taskDoneHistory', row).then((res) => {
+          row.id = res.data.id
+          var newTaskDone = this.$forkJson(row)
+          newTaskDone.name = this.currentRow.name
+          newTaskDone.workHour = this.currentRow.workHour
+          if (this.shareData.taskDone[row.day] !== undefined) {
+            this.shareData.taskDone[row.day].push(newTaskDone)
+          } else {
+            this.$set(this.shareData.taskDone, row.day, [newTaskDone])
+          }
+        })
+
       }
       var h = 0
       this.currentRow.taskDoneHistory.forEach((tdh) => {
         h = h + tdh.doneHour
       })
       this.currentRow.doneHour = h
+      this.api_updateNewTaskDoneHour(this.currentRow.id, h)
       this.$emit('onFresh')
       row.$edit = false
     },
@@ -207,21 +226,41 @@ export default {
     },
     m_addTaskHistory() {
       var newTaskHistory = {
-        taskId: this.currentRow.id,
+        newTask: this.$forkJson(this.currentRow),
+        newTaskId: this.currentRow.id,
         day: this.$formatDateTime(new Date(), 'yyyy-MM-dd'),
         doneHour: 4,
         mark: '',
         $edit: true
       }
       this.currentRowHistory.push(newTaskHistory)
-
     },
     m_deleteTaskHistory(scope, row, index) {
-      this.currentRowHistory.splice(index, 1)
+      this.beforeDelete(() => {
+        this.$axios.delete('/api/task/taskDoneHistory', { params: { id: row.id } }).then((res) => {
+          var i = -1
+          this.shareData.taskDone[row.day].forEach((td, index1) => {
+            if (td.id === row.id) {
+              i = index1
+            }
+          })
+          if (i > -1) { this.shareData.taskDone[row.day].splice(i, 1) }
+          this.currentRowHistory.splice(index, 1)
+          var h = 0
+          this.currentRow.taskDoneHistory.forEach((tdh) => {
+            h = h + tdh.doneHour
+          })
+          this.currentRow.doneHour = h
+          this.api_updateNewTaskDoneHour(this.currentRow.id, h)
+          this.$emit('onFresh')
+        })
+      })
+
     },
     m_addNewTaskRow() {
       this.dialogVisibleNewTaskForm = false
       var newTaskRow = JSON.parse(JSON.stringify(this.newTaskRow))
+      delete newTaskRow.id
       this.$axios.post('/api/task/newTask', newTaskRow).then((res) => {
         console.log(this)
         var i = this.newTask.push(newTaskRow)
@@ -237,12 +276,16 @@ export default {
     m_openNewTaskForm() {
       this.newTaskRow.$level = this.newTask.length
       this.dialogVisibleNewTaskForm = true
+      this.newTaskRow.id = 0
     },
     m_workHour(scope, row, index) {
-      this.currentRow = row
-      this.currentRow['$level'] = this.shareData.newTaskLevelArr.indexOf(row.id)
-      this.dialogVisibleWorkHour = true
-      this.currentRowHistory = this.currentRow.taskDoneHistory
+      this.$axios.get('/api/task/taskDoneHistory/newTaskId/' + row.id).then((res) => {
+        row.taskDoneHistory = res.data
+        this.currentRow = row
+        this.currentRow['$level'] = this.shareData.newTaskLevelArr.indexOf(row.id)
+        this.dialogVisibleWorkHour = true
+        this.currentRowHistory = this.currentRow.taskDoneHistory
+      })
     },
     m_delete(scope, row, index) {
       console.log(row)
